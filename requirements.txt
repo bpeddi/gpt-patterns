@@ -3,3 +3,7 @@ langchain==0.0.335
 streamlit==1.28.2
 streamlit-option-menu==0.3.6
 streamlit-authenticator==0.2.3
+pypdf
+faiss-cpu
+pypdf
+tiktoken
