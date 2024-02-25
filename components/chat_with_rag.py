@@ -16,7 +16,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores.faiss import FAISS
 from pypdf import PdfReader
-import openai
+from openai import OpenAI
 import os
 import re
 from io import BytesIO
@@ -115,7 +115,7 @@ def get_index_for_pdf(pdf_files, pdf_names, api_key):
     return index
 
 # Cached function to create a vectordb for the provided PDF files
-@st.cache_data
+# @st.cache_data
 def create_vectordb(files, filenames,api_key):
     # Show a spinner while creating the vectordb
     with st.spinner("Vector database"):
@@ -124,6 +124,18 @@ def create_vectordb(files, filenames,api_key):
         )
     return vectordb
 
+def chat_with_openai (model,messages,api_key) : 
+    client = OpenAI(
+    # This is the default and can be omitted
+    api_key=api_key,
+    )
+
+    chat_completion = client.chat.completions.create(
+                    messages=messages,
+                    model=model,
+                    stream=True
+                    )
+    return chat_completion
 
 def chat_with_rag(api_key):
     """
@@ -180,7 +192,7 @@ def chat_with_rag(api_key):
     if question:
         vectordb = st.session_state.get("vectordb", None)
         if not vectordb:
-            with st.message("assistant"):
+            with st.chat_message("assistant"):
                 st.write("You need to provide a PDF")
                 st.stop()
 
@@ -209,11 +221,11 @@ def chat_with_rag(api_key):
         response = []
         result = ""
 
-        # st.write ( "Sending following Message", prompt)
-        for chunk in openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", messages=prompt, stream=True
-        ):
-            text = chunk.choices[0].get("delta", {}).get("content")
+    # st.write ( "Sending following Message", prompt)
+        for chunk in chat_with_openai(
+            model="gpt-3.5-turbo", messages=prompt, api_key=api_key
+            ):
+            text = chunk.choices[0].delta.content
             if text is not None:
                 response.append(text)
                 result = "".join(response).strip()
