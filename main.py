@@ -1,6 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from langchain.chat_models import ChatOpenAI
+from dotenv import load_dotenv
 from components import (
     home,
     refactor_page,
@@ -8,12 +9,32 @@ from components import (
     test_page,
     lang_page,
     code_documentation_page,
-    database_page
+    database_page,
+    refactor_page,
+    chat_with_docs,
+    chat_with_rag
 )
+import os
+from langchain.embeddings.openai import OpenAIEmbeddings
+
+def llm_chat():
+    llm = ChatOpenAI(temperature=0)
+    return llm
+
+
+def llm_embedding():
+    llm = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
+    return llm
+
 
 
 def main():
-    chat = None
+    # load_dotenv()
+    print(os.getenv("OPENAI_API_KEY"))
+    api_key=os.getenv("OPENAI_API_KEY")
+
+    chat = llm_chat()
+    # embedding = llm_embedding()
     st.set_page_config(
         page_title="CodeCraft GPT: A Comprehensive Code Enhancement Platform",
         page_icon="🚀",
@@ -24,11 +45,11 @@ def main():
         selected = option_menu(
             menu_title="GEN AI Patterns",
             options=[
-                "Home", "Search Documents", "Text Summarization",
+                "Home", "Chat with Documents" , "Chat Documents with RAG" , "Search Documents", "Text Summarization",
                 "TestGenius", "LangLink", "CodeDocGenius", "Database"
             ],
             icons=[
-                'house', 'gear', 'palette', 'clipboard2-pulse',
+                'house', 'gear', 'gear', 'palette', 'clipboard2-pulse', 'clipboard2-pulse',
                 'code-slash', 'file-text', 'database'
             ],
             default_index=0
@@ -36,6 +57,8 @@ def main():
     
     # Dictionary containing functions without invoking them
     pages = {
+        "Chat with Documents" : chat_with_docs.chat_with_docs,
+        "Chat Documents with RAG" : chat_with_rag.chat_with_rag,
         "Search Documents": refactor_page.show_refactor_page,
         "Text Summarization": style_page.show_style_page,
         "TestGenius": test_page.show_test_page,
@@ -46,7 +69,9 @@ def main():
     }
 
     if selected in pages:
-        if selected != "Home":
+        if selected == "Chat Documents with RAG" : 
+            pages[selected](api_key)
+        elif selected != "Home":
             # Call the function corresponding to the selected page
             pages[selected](chat)
         else:
